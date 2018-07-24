@@ -26,6 +26,9 @@ const (
 	// See http://docs.graylog.org/en/2.4/pages/gelf.html.
 	MaxChunkCount = 128
 
+	// DefaultChunkSize is default WAN chunk size.
+	DefaultChunkSize = 1420
+
 	// CompressionNone don't use compression.
 	CompressionNone = 0
 
@@ -114,7 +117,7 @@ func NewCore(options ...Option) (_ zapcore.Core, err error) {
 		},
 		version:          "1.1",
 		enabler:          zap.NewAtomicLevel(),
-		chunkSize:        MaxChunkSize,
+		chunkSize:        DefaultChunkSize,
 		writeSyncers:     make([]zapcore.WriteSyncer, 0, 8),
 		compressionType:  CompressionGzip,
 		compressionLevel: gzip.BestCompression,
