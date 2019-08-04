@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/snovichkov/zap-gelf"
+	gelf "github.com/snovichkov/zap-gelf"
 )
 
 func TestAddr(t *testing.T) {
