@@ -72,7 +72,7 @@ type (
 
 	// implement io.WriteCloser.
 	writeCloser struct {
-		bytes.Buffer
+		*bytes.Buffer
 	}
 
 	// implement zapcore.Core.
@@ -291,7 +291,7 @@ func (w *writer) Write(buf []byte) (n int, err error) {
 
 	switch w.compressionType {
 	case CompressionNone:
-		cw = &writeCloser{cBuf}
+		cw = &writeCloser{&cBuf}
 	case CompressionGzip:
 		cw, err = gzip.NewWriterLevel(&cBuf, w.compressionLevel)
 	case CompressionZlib:
