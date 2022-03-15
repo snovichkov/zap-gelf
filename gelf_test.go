@@ -1,6 +1,8 @@
 package gelf_test
 
 import (
+	"encoding/json"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -37,6 +39,33 @@ func TestVersion(t *testing.T) {
 	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
 }
 
+func TestMessageKey(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.MessageKey("custom_message"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestLevelKey(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.LevelKey("custom_level"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestTimeKey(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.TimeKey("custom_time"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
 func TestNameKey(t *testing.T) {
 	var core, err = gelf.NewCore(
 		gelf.NameKey("custom_name"),
@@ -49,6 +78,33 @@ func TestNameKey(t *testing.T) {
 func TestCallerKey(t *testing.T) {
 	var core, err = gelf.NewCore(
 		gelf.CallerKey("custom_caller"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestFunctionKey(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.FunctionKey("custom_function"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestStacktraceKey(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.StacktraceKey("custom_stacktrace"),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestSkipLineEnding(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.SkipLineEnding(true),
 	)
 
 	assert.Nil(t, err, "Unexpected error")
@@ -85,6 +141,18 @@ func TestEncodeCaller(t *testing.T) {
 func TestEncodeName(t *testing.T) {
 	var core, err = gelf.NewCore(
 		gelf.EncodeName(zapcore.FullNameEncoder),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestNewReflectedEncoder(t *testing.T) {
+	var newEncoder = func(writer io.Writer) zapcore.ReflectedEncoder {
+		return json.NewEncoder(writer)
+	}
+	var core, err = gelf.NewCore(
+		gelf.NewReflectedEncoder(newEncoder),
 	)
 
 	assert.Nil(t, err, "Unexpected error")

@@ -178,6 +178,30 @@ func Version(value string) Option {
 	})
 }
 
+// MessageKey set zapcore.EncoderConfig MessageKey property.
+func MessageKey(value string) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.MessageKey = escapeKey(value)
+		return nil
+	})
+}
+
+// LevelKey set zapcore.EncoderConfig LevelKey property.
+func LevelKey(value string) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.LevelKey = escapeKey(value)
+		return nil
+	})
+}
+
+// TimeKey set zapcore.EncoderConfig TimeKey property.
+func TimeKey(value string) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.TimeKey = escapeKey(value)
+		return nil
+	})
+}
+
 // NameKey set zapcore.EncoderConfig NameKey property.
 func NameKey(value string) Option {
 	return optionFunc(func(conf *optionConf) error {
@@ -190,6 +214,30 @@ func NameKey(value string) Option {
 func CallerKey(value string) Option {
 	return optionFunc(func(conf *optionConf) error {
 		conf.encoder.CallerKey = escapeKey(value)
+		return nil
+	})
+}
+
+// FunctionKey set zapcore.EncoderConfig FunctionKey property.
+func FunctionKey(value string) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.FunctionKey = escapeKey(value)
+		return nil
+	})
+}
+
+// StacktraceKey set zapcore.EncoderConfig StacktraceKey property.
+func StacktraceKey(value string) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.StacktraceKey = escapeKey(value)
+		return nil
+	})
+}
+
+// SkipLineEnding set zapcore.EncoderConfig SkipLineEnding property.
+func SkipLineEnding(value bool) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.SkipLineEnding = value
 		return nil
 	})
 }
@@ -222,6 +270,14 @@ func EncodeCaller(value zapcore.CallerEncoder) Option {
 func EncodeName(value zapcore.NameEncoder) Option {
 	return optionFunc(func(conf *optionConf) error {
 		conf.encoder.EncodeName = value
+		return nil
+	})
+}
+
+// NewReflectedEncoder set zapcore.EncoderConfig NewReflectedEncoder property.
+func NewReflectedEncoder(value func(io.Writer) zapcore.ReflectedEncoder) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.encoder.NewReflectedEncoder = value
 		return nil
 	})
 }
