@@ -142,7 +142,7 @@ func NewCore(options ...Option) (_ zapcore.Core, err error) {
 
 	var core = zapcore.NewCore(
 		zapcore.NewJSONEncoder(conf.encoder),
-		zapcore.AddSync(w),
+		w,
 		conf.enabler,
 	)
 
@@ -338,6 +338,9 @@ func CompressionLevel(value int) Option {
 	})
 }
 
+// Ensure *writer implements zapcore.WriteSyncer.
+var _ zapcore.WriteSyncer = (*writer)(nil)
+
 // Write implements io.Writer.
 func (w *writer) Write(buf []byte) (n int, err error) {
 	var (
@@ -378,6 +381,11 @@ func (w *writer) Write(buf []byte) (n int, err error) {
 	}
 
 	return n, nil
+}
+
+// Sync is a no-op, but required to implement the zapcore.WriteSyncer interface.
+func (w *writer) Sync() error {
+	return nil
 }
 
 // Close implementation of io.WriteCloser.
