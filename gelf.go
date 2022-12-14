@@ -140,9 +140,16 @@ func NewCore(options ...Option) (_ zapcore.Core, err error) {
 		return nil, err
 	}
 
+	var ws zapcore.WriteSyncer = w
+
+	if len(conf.writeSyncers) > 0 {
+		writers := append([]zapcore.WriteSyncer{w}, conf.writeSyncers...)
+		ws = zapcore.NewMultiWriteSyncer(writers...)
+	}
+
 	var core = zapcore.NewCore(
 		zapcore.NewJSONEncoder(conf.encoder),
-		w,
+		ws,
 		conf.enabler,
 	)
 
@@ -270,6 +277,14 @@ func EncodeCaller(value zapcore.CallerEncoder) Option {
 func EncodeName(value zapcore.NameEncoder) Option {
 	return optionFunc(func(conf *optionConf) error {
 		conf.encoder.EncodeName = value
+		return nil
+	})
+}
+
+// WriteSyncers sets additional zapcore.WriteSyncers on the core.
+func WriteSyncers(value ...zapcore.WriteSyncer) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.writeSyncers = append(conf.writeSyncers, value...)
 		return nil
 	})
 }

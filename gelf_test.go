@@ -3,6 +3,7 @@ package gelf_test
 import (
 	"encoding/json"
 	"io"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -141,6 +142,15 @@ func TestEncodeCaller(t *testing.T) {
 func TestEncodeName(t *testing.T) {
 	var core, err = gelf.NewCore(
 		gelf.EncodeName(zapcore.FullNameEncoder),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+}
+
+func TestWriteSyncers(t *testing.T) {
+	var core, err = gelf.NewCore(
+		gelf.WriteSyncers(os.Stderr),
 	)
 
 	assert.Nil(t, err, "Unexpected error")
