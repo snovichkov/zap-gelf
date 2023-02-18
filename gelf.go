@@ -94,6 +94,9 @@ var (
 	// chunkedMagicBytes chunked message magic bytes.
 	// See http://docs.graylog.org/en/2.4/pages/gelf.html.
 	chunkedMagicBytes = []byte{0x1e, 0x0f}
+
+	// Ensure *writer implements zapcore.WriteSyncer.
+	_ zapcore.WriteSyncer = (*writer)(nil)
 )
 
 // NewCore zap core constructor.
@@ -140,9 +143,15 @@ func NewCore(options ...Option) (_ zapcore.Core, err error) {
 		return nil, err
 	}
 
+	var ws zapcore.WriteSyncer = w
+	if len(conf.writeSyncers) > 0 {
+		var writers = append([]zapcore.WriteSyncer{w}, conf.writeSyncers...)
+		ws = zapcore.NewMultiWriteSyncer(writers...)
+	}
+
 	var core = zapcore.NewCore(
 		zapcore.NewJSONEncoder(conf.encoder),
-		zapcore.AddSync(w),
+		ws,
 		conf.enabler,
 	)
 
@@ -274,6 +283,14 @@ func EncodeName(value zapcore.NameEncoder) Option {
 	})
 }
 
+// WriteSyncers sets additional zapcore.WriteSyncers on the core.
+func WriteSyncers(value ...zapcore.WriteSyncer) Option {
+	return optionFunc(func(conf *optionConf) error {
+		conf.writeSyncers = append(conf.writeSyncers, value...)
+		return nil
+	})
+}
+
 // NewReflectedEncoder set zapcore.EncoderConfig NewReflectedEncoder property.
 func NewReflectedEncoder(value func(io.Writer) zapcore.ReflectedEncoder) Option {
 	return optionFunc(func(conf *optionConf) error {
@@ -378,6 +395,11 @@ func (w *writer) Write(buf []byte) (n int, err error) {
 	}
 
 	return n, nil
+}
+
+// Sync is a no-op, but required to implement the zapcore.WriteSyncer interface.
+func (w *writer) Sync() error {
+	return nil
 }
 
 // Close implementation of io.WriteCloser.
