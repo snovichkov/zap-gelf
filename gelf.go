@@ -202,8 +202,8 @@ func TimeKey(value string) Option {
 	})
 }
 
-// DynamicLevel set dynamic logging level.
-func DynamicLevel(level zap.AtomicLevel) Option {
+// LevelAtomic set atomic logging level which can be changed dynamically.
+func LevelAtomic(level zap.AtomicLevel) Option {
 	return optionFunc(func(conf *optionConf) (err error) {
 		conf.enabler = level
 		return nil

@@ -181,12 +181,12 @@ func TestLevelString(t *testing.T) {
 	assert.False(t, core.Enabled(zap.WarnLevel))
 }
 
-func TestDynamicLevel(t *testing.T) {
-	dynamicLevel := zap.NewAtomicLevel()
-	dynamicLevel.SetLevel(zap.ErrorLevel)
+func TestLevelAtomic(t *testing.T) {
+	atomicLevel := zap.NewAtomicLevel()
+	atomicLevel.SetLevel(zap.ErrorLevel)
 
 	var core, err = gelf.NewCore(
-		gelf.DynamicLevel(dynamicLevel),
+		gelf.LevelAtomic(atomicLevel),
 	)
 
 	assert.Nil(t, err, "Unexpected error")
@@ -194,7 +194,7 @@ func TestDynamicLevel(t *testing.T) {
 	assert.True(t, core.Enabled(zap.ErrorLevel))
 	assert.False(t, core.Enabled(zap.WarnLevel))
 
-	dynamicLevel.SetLevel(zap.WarnLevel)
+	atomicLevel.SetLevel(zap.WarnLevel)
 
 	assert.True(t, core.Enabled(zap.ErrorLevel))
 	assert.True(t, core.Enabled(zap.WarnLevel))
