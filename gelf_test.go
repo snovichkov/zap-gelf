@@ -171,20 +171,43 @@ func TestNewReflectedEncoder(t *testing.T) {
 
 func TestLevel(t *testing.T) {
 	var core, err = gelf.NewCore(
-		gelf.Level(zap.DebugLevel),
+		gelf.Level(zap.ErrorLevel),
 	)
 
 	assert.Nil(t, err, "Unexpected error")
 	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+	assert.True(t, core.Enabled(zap.ErrorLevel))
+	assert.False(t, core.Enabled(zap.WarnLevel))
 }
 
 func TestLevelString(t *testing.T) {
 	var core, err = gelf.NewCore(
-		gelf.LevelString("debug"),
+		gelf.LevelString("error"),
 	)
 
 	assert.Nil(t, err, "Unexpected error")
 	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+	assert.True(t, core.Enabled(zap.ErrorLevel))
+	assert.False(t, core.Enabled(zap.WarnLevel))
+}
+
+func TestLevelAtomic(t *testing.T) {
+	atomicLevel := zap.NewAtomicLevel()
+	atomicLevel.SetLevel(zap.ErrorLevel)
+
+	var core, err = gelf.NewCore(
+		gelf.LevelAtomic(atomicLevel),
+	)
+
+	assert.Nil(t, err, "Unexpected error")
+	assert.Implements(t, (*zapcore.Core)(nil), core, "Expect zapcore.Core")
+	assert.True(t, core.Enabled(zap.ErrorLevel))
+	assert.False(t, core.Enabled(zap.WarnLevel))
+
+	atomicLevel.SetLevel(zap.WarnLevel)
+
+	assert.True(t, core.Enabled(zap.ErrorLevel))
+	assert.True(t, core.Enabled(zap.WarnLevel))
 }
 
 func TestChunkSize(t *testing.T) {

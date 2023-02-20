@@ -211,6 +211,14 @@ func TimeKey(value string) Option {
 	})
 }
 
+// LevelAtomic set atomic logging level which can be changed dynamically.
+func LevelAtomic(level zap.AtomicLevel) Option {
+	return optionFunc(func(conf *optionConf) (err error) {
+		conf.enabler = level
+		return nil
+	})
+}
+
 // NameKey set zapcore.EncoderConfig NameKey property.
 func NameKey(value string) Option {
 	return optionFunc(func(conf *optionConf) error {
