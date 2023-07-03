@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -68,11 +69,18 @@ type (
 		chunkDataSize    int
 		compressionType  int
 		compressionLevel int
+		writeCloserPool  *sync.Pool
+	}
+
+	writeCloserResetter interface {
+		io.WriteCloser
+		Reset(w io.Writer)
 	}
 
 	// implement io.WriteCloser.
 	writeCloser struct {
-		*bytes.Buffer
+		err    error
+		buffer io.Writer
 	}
 
 	// implement zapcore.Core.
@@ -137,6 +145,10 @@ func NewCore(options ...Option) (_ zapcore.Core, err error) {
 		chunkDataSize:    conf.chunkSize - 12, // chunk size - chunk header size
 		compressionType:  conf.compressionType,
 		compressionLevel: conf.compressionLevel,
+	}
+
+	w.writeCloserPool = &sync.Pool{
+		New: w.newWriteCloser,
 	}
 
 	if w.conn, err = net.Dial("udp", conf.addr); err != nil {
@@ -366,28 +378,22 @@ func CompressionLevel(value int) Option {
 // Write implements io.Writer.
 func (w *writer) Write(buf []byte) (n int, err error) {
 	var (
-		cw   io.WriteCloser
+		cw   writeCloserResetter
 		cBuf bytes.Buffer
 	)
 
-	switch w.compressionType {
-	case CompressionNone:
-		cw = &writeCloser{&cBuf}
-	case CompressionGzip:
-		cw, err = gzip.NewWriterLevel(&cBuf, w.compressionLevel)
-	case CompressionZlib:
-		cw, err = zlib.NewWriterLevel(&cBuf, w.compressionLevel)
-	}
+	cw = w.writeCloserPool.Get().(writeCloserResetter)
 
-	if err != nil {
-		return 0, err
-	}
+	cw.Reset(&cBuf)
 
 	if n, err = cw.Write(buf); err != nil {
 		return n, err
 	}
 
-	cw.Close()
+	if cw.Close() == nil {
+		w.writeCloserPool.Put(cw)
+	}
+	cw = nil
 
 	var cBytes = cBuf.Bytes()
 	if count := w.chunkCount(cBytes); count > 1 {
@@ -410,9 +416,36 @@ func (w *writer) Sync() error {
 	return nil
 }
 
+func (w *writer) newWriteCloser() (cw interface{}) {
+	var err error
+	switch w.compressionType {
+	case CompressionNone:
+		cw = &writeCloser{nil, nil}
+	case CompressionGzip:
+		cw, err = gzip.NewWriterLevel(nil, w.compressionLevel)
+	case CompressionZlib:
+		cw, err = zlib.NewWriterLevel(nil, w.compressionLevel)
+	}
+	if err != nil {
+		cw = &writeCloser{err, nil}
+	}
+	return cw
+}
+
 // Close implementation of io.WriteCloser.
 func (*writeCloser) Close() error {
 	return nil
+}
+
+func (wc *writeCloser) Reset(buffer io.Writer) {
+	wc.buffer = buffer
+}
+
+func (wc *writeCloser) Write(p []byte) (n int, err error) {
+	if wc.err != nil {
+		return 0, err
+	}
+	return wc.buffer.Write(p)
 }
 
 // Enabled implementation of zapcore.Core.
